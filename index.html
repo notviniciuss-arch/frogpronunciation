@@ -58,8 +58,8 @@
       border-radius: 20px;
       display: flex;
       align-items: center;
-      justify-content: center; /* Centralizes the content */
-      flex-grow: 1; /* Takes up the remaining space */
+      justify-content: center;
+      flex-grow: 1;
       box-shadow: inset 0 2px 5px rgba(0,0,0,0.1), 0 4px 10px rgba(0,0,0,0.2);
     }
 
@@ -67,14 +67,14 @@
       color: #1d5e3f;
       font-size: 1.1rem;
       font-weight: 600;
-      text-align: center; /* Centralizes text */
+      text-align: center;
       width: 100%;
     }
     
     .game-header-text strong {
-      color: #0f3e26; /* Dark green text */
+      color: #0f3e26;
       font-size: 1.2rem;
-      background: #b7dc99; /* Light green highlight */
+      background: #b7dc99;
       padding: 2px 8px;
       border-radius: 10px;
       display: inline-block;
@@ -120,7 +120,7 @@
       padding: 25px 20px 25px 50px; 
       box-shadow: 10px 5px 20px rgba(0,0,0,0.4);
       transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      z-index: 1; /* Behind board */
+      z-index: 1;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -383,6 +383,24 @@
     .modal-title { font-size: 1.8rem; color: #1d5e3f; margin: 0; }
     .modal-text { font-size: 1.1rem; color: #333; margin: 0; font-weight: bold;}
     
+    /* Style for the clickable word inside the modal */
+    .replay-word {
+      color: #1d5e3f;
+      background: #b7dc99;
+      padding: 2px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      display: inline-block;
+      transition: 0.1s linear;
+    }
+    .replay-word:hover {
+      background: #ffb042;
+      transform: scale(1.02);
+    }
+    .replay-word:active {
+      transform: scale(0.98);
+    }
+    
     .btn-restart {
       background: #ffb042;
       border: none;
@@ -449,7 +467,7 @@
       <div class="modal-card">
         <div class="modal-icon" id="modalIcon">💦</div>
         <h2 class="modal-title" id="modalTitle">Game Over</h2>
-        <p class="modal-text" id="modalText">The frog sank!</p>
+        <p class="modal-text" id="modalText">You stepped on <strong>"..."</strong>.</p>
         <button class="btn-restart" id="modalRestartBtn">Try Again</button>
       </div>
     </div>
@@ -458,6 +476,135 @@
 </div>
 
 <script>
+  // ================================
+  //  GAME DICTIONARY (UPDATED)
+  // ================================
+  const gameData = {
+    "ei": {
+      phoneme: "/eɪ/",
+      example: "cake",
+      words: [
+        ["cake", "pray", "said", "achieve", "might", "heir"],
+        ["have", "angel", "dance", "medium", "either", "orient"],
+        ["bike", "eight", "save", "steak", "mean", "weird"],
+        ["frost", "hand", "protein", "make", "quiet", "seizure"],
+        ["ice", "piece", "piece", "obey", "paper", "weight"]
+      ],
+      correct: [[0,0], [0,1], [1,1], [2,1], [2,2], [2,3], [3,3], [4,3], [4,4], [4,5]],
+      start: [0,0], end: [4,5]
+    },
+    "ou": {
+      phoneme: "/oʊ/",
+      example: "boat",
+      words: [
+        ["boat", "ball", "our", "cousin", "double", "cocoa"],
+        ["wholly", "drop", "vow", "yolk", "know", "studio"],
+        ["grow", "who", "tough", "though", "south", "almost"],
+        ["own", "how", "soap", "phobia", "doubt", "son"],
+        ["load", "folk", "ocean", "pool", "dark", "lion"]
+      ],
+      correct: [[0,0], [1,0], [2,0], [3,0], [4,0], [4,1], [4,2], [3,2], [3,3], [2,3], [1,3], [1,4], [1,5], [0,5]],
+      start: [0,0], end: [0,5]
+    },
+    "oi": {
+      phoneme: "/ɔɪ/",
+      example: "boy",
+      words: [
+        ["boy", "destroy", "toilet", "point", "polar", "turtle"],
+        ["poll", "orange", "memoir", "choice", "mouth", "snow"],
+        ["tongue", "avoid", "boil", "alloy", "nose", "owl"],
+        ["shop", "employ", "notch", "flow", "choir", "fold"],
+        ["bowl", "joy", "moist", "void", "poison", "voice"]
+      ],
+      correct: [[0,0], [0,1], [0,2], [0,3], [1,3], [2,1], [2,2], [2,3], [3,1], [4,1], [4,2], [4,3], [4,4], [4,5]],
+      start: [0,0], end: [4,5]
+    },
+    "ai": {
+      phoneme: "/aɪ/",
+      example: "eye",
+      words: [
+        ["eye", "strain", "frail", "friend", "veil", "aim"],
+        ["vitamin", "chief", "triangle", "white", "alibi", "jail"],
+        ["rhyme", "deck", "apply", "profit", "height", "archaic"],
+        ["sight", "rivalry", "high", "saint", "kite", "license"],
+        ["chain", "river", "vain", "remain", "braid", "tired"]
+      ],
+      correct: [[0,0], [1,0], [2,0], [3,0], [3,1], [3,2], [2,2], [1,2], [1,3], [1,4], [2,4], [3,4], [3,5], [4,5]],
+      start: [0,0], end: [4,5]
+    },
+    "aw": {
+      phoneme: "/aʊ/",
+      example: "now",
+      words: [
+        ["now", "august", "haunt", "bureau", "grown", "low"],
+        ["about", "house", "loud", "fraud", "crowd", "shout"],
+        ["laugh", "mother", "cloud", "vault", "cow", "could"],
+        ["aura", "trauma", "drought", "down", "sour", "auto"],
+        ["show", "author", "beauty", "bought", "color", "awful"]
+      ],
+      correct: [[0,0], [1,0], [1,1], [1,2], [2,2], [3,2], [3,3], [3,4], [2,4], [1,4], [1,5]],
+      start: [0,0], end: [1,5]
+    }
+  };
+
+  // ================================
+  //  DYNAMIC AUDIO MAPPING (auto‑updates with gameData)
+  // ================================
+  const AUDIO_BASE_URL = "https://raw.githubusercontent.com/notviniciuss-arch/frogpronunciation/main/sounds/";
+  
+  // Build word → .mp3 mapping automatically from gameData
+  const wordAudioMap = {};
+  for (const level of Object.values(gameData)) {
+    for (const row of level.words) {
+      for (const word of row) {
+        if (!wordAudioMap[word]) {
+          // Audio file is expected to be exactly "word.mp3" (lowercase)
+          wordAudioMap[word] = `${word}.mp3`;
+        }
+      }
+    }
+  }
+  
+  // Preload audio objects
+  const audioCache = {};
+  function preloadWordAudio(word) {
+    if (!audioCache[word] && wordAudioMap[word]) {
+      const audio = new Audio(AUDIO_BASE_URL + wordAudioMap[word]);
+      audio.preload = "auto";
+      audioCache[word] = audio;
+    }
+  }
+  
+  // Play the pronunciation of a specific word (respects mute)
+  function playWordSound(word) {
+    if (isMuted) return;
+    if (!wordAudioMap[word]) {
+      console.warn(`No audio file found for word: "${word}"`);
+      return;
+    }
+    let audio = audioCache[word];
+    if (!audio) {
+      audio = new Audio(AUDIO_BASE_URL + wordAudioMap[word]);
+      audio.preload = "auto";
+      audioCache[word] = audio;
+    }
+    audio.currentTime = 0;
+    audio.play().catch(e => console.log("Audio play failed:", e));
+  }
+  
+  // Preload all words from the current level
+  function preloadAllWordsInCurrentLevel() {
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        const word = RAW_WORDS[r][c];
+        if (wordAudioMap[word]) preloadWordAudio(word);
+      }
+    }
+  }
+  
+  // ================================
+  //  EXISTING GAME LOGIC (unchanged)
+  // ================================
   const ROWS = 5;
   const COLS = 6;
 
@@ -500,7 +647,6 @@
     drawerToggle.textContent = isOpen ? "◀" : "▶";
   });
 
-  // Close drawer if clicking outside of it
   document.addEventListener("click", (e) => {
     if (sideDrawer.classList.contains("open") && !sideDrawer.contains(e.target) && e.target !== drawerToggle) {
       sideDrawer.classList.remove("open");
@@ -548,13 +694,22 @@
       modalIcon.textContent = "🏆";
       modalTitle.textContent = "Perfect Leap!";
       modalTitle.style.color = "#2b8265";
-      modalText.textContent = `You reached safely.`;
+      modalText.innerHTML = `You reached safely.`;
       modalRestartBtn.textContent = "Play Next Sound 🎲";
     } else {
       modalIcon.textContent = "💦";
       modalTitle.textContent = "Game Over";
       modalTitle.style.color = "#a03232";
-      modalText.innerHTML = `You stepped on <strong>"${word}"</strong>.`;
+      modalText.innerHTML = `You stepped on <strong class="replay-word" id="wrongWordToReplay">"${word}"</strong>. Click to hear again.`;
+      setTimeout(() => {
+        const replaySpan = document.getElementById("wrongWordToReplay");
+        if (replaySpan) {
+          replaySpan.addEventListener("click", (e) => {
+            e.stopPropagation();
+            playWordSound(word);
+          });
+        }
+      }, 10);
       modalRestartBtn.textContent = "Try Again";
     }
     gameModal.classList.add("active");
@@ -567,92 +722,19 @@
   modalRestartBtn.addEventListener("click", () => {
     hideModal();
     if (victory) {
-      // Pick a random level different from the current one
       const keys = Object.keys(gameData);
       let nextKey = keys[Math.floor(Math.random() * keys.length)];
       while (nextKey === currentLevelKey) {
         nextKey = keys[Math.floor(Math.random() * keys.length)];
       }
-      
-      // Update sidebar UI to show the new active level
       levelBtns.forEach(b => b.classList.remove("active"));
       const targetBtn = Array.from(levelBtns).find(b => b.dataset.level === nextKey);
       if (targetBtn) targetBtn.classList.add("active");
-      
       loadLevel(nextKey);
     } else {
       resetGame();
     }
   });
-
-  // --- GAME DICTIONARY --- 
-  const gameData = {
-    "ei": {
-      phoneme: "/eɪ/",
-      example: "cake",
-      words: [
-        ["cake", "pray", "said", "achieve", "might", "sight"],
-        ["have", "angel", "dance", "medium", "either", "orient"],
-        ["bike", "eight", "save", "steak", "mean", "weird"],
-        ["frost", "hand", "height", "make", "quiet", "seizure"],
-        ["ice", "piece", "piece", "obey", "paper", "weight"]
-      ],
-      correct: [[0,0], [0,1], [1,1], [2,1], [2,2], [2,3], [3,3], [4,3], [4,4], [4,5]],
-      start: [0,0], end: [4,5]
-    },
-    "ou": {
-      phoneme: "/oʊ/",
-      example: "boat",
-      words: [
-        ["boat", "ball", "our", "now", "color", "cocoa"],
-        ["wholly", "drop", "vow", "yolk", "know", "studio"],
-        ["grow", "who", "tough", "though", "south", "almost"],
-        ["own", "how", "soap", "phobia", "doubt", "son"],
-        ["load", "folk", "ocean", "pool", "dark", "lion"]
-      ],
-      correct: [[0,0], [1,0], [2,0], [3,0], [4,0], [4,1], [4,2], [3,2], [3,3], [2,3], [1,3], [1,4], [1,5], [0,5]],
-      start: [0,0], end: [0,5]
-    },
-    "oi": {
-      phoneme: "/ɔɪ/",
-      example: "boy",
-      words: [
-        ["boy", "destroy", "toilet", "point", "polar", "turtle"],
-        ["poll", "orange", "fold", "choice", "mouth", "snow"],
-        ["tongue", "avoid", "boil", "alloy", "soap", "owl"],
-        ["shop", "employ", "show", "flow", "notch", "fold"],
-        ["bowl", "joy", "moist", "void", "poison", "voice"]
-      ],
-      correct: [[0,0], [0,1], [0,2], [0,3], [1,3], [2,1], [2,2], [2,3], [3,1], [4,1], [4,2], [4,3], [4,4], [4,5]],
-      start: [0,0], end: [4,5]
-    },
-    "ai": {
-      phoneme: "/aɪ/",
-      example: "eye",
-      words: [
-        ["eye", "stain", "frail", "friend", "veil", "aim"],
-        ["vitamin", "chief", "triangle", "white", "alibi", "jail"],
-        ["rhyme", "deck", "apply", "profit", "height", "archaic"],
-        ["sight", "rivalry", "high", "saint", "kite", "license"],
-        ["chain", "river", "vain", "remain", "braid", "key"]
-      ],
-      correct: [[0,0], [1,0], [2,0], [3,0], [3,1], [3,2], [2,2], [1,2], [1,3], [1,4], [2,4], [3,4], [3,5]],
-      start: [0,0], end: [3,5]
-    },
-    "aw": {
-      phoneme: "/aʊ/",
-      example: "now",
-      words: [
-        ["now", "august", "haunt", "bureau", "grown", "low"],
-        ["about", "house", "loud", "almost", "crowd", "shout"],
-        ["ball", "mother", "cloud", "vault", "cow", "could"],
-        ["aura", "trauma", "drought", "down", "sour", "auto"],
-        ["show", "know", "beauty", "bought", "color", "awful"]
-      ],
-      correct: [[0,0], [1,0], [1,1], [1,2], [2,2], [3,2], [3,3], [3,4], [2,4], [1,4], [1,5]],
-      start: [0,0], end: [1,5]
-    }
-  };
 
   let RAW_WORDS, CORRECT_POSITIONS, START_ROW, START_COL, FINAL_ROW, FINAL_COL, PHONEME, EXAMPLE;
   let frogRow = 0, frogCol = 0;
@@ -674,14 +756,14 @@
     PHONEME = data.phoneme;
     EXAMPLE = data.example;
     
-    // Update Instruction Header
+    preloadAllWordsInCurrentLevel();
+    
     gameHeader.innerHTML = `Help the frog leap onto the pads that contain the <strong>${PHONEME}</strong> sound as in <strong>"${EXAMPLE}"</strong>.`;
 
     hideModal();
     resetGame();
   }
 
-  // Bind side menu buttons
   levelBtns.forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -723,10 +805,13 @@
 
     const isTargetCorrect = isCorrectSound(row, col);
     const isTargetFinal = (row === FINAL_ROW && col === FINAL_COL);
+    const targetWord = RAW_WORDS[row][col];
 
     visitedMap[frogRow][frogCol] = true;
 
+    // Play the word pronunciation for ANY landing (correct, wrong, or final)
     if (isTargetFinal) {
+      playWordSound(targetWord);
       frogRow = row; frogCol = col;
       winGame();
       return true;
@@ -734,16 +819,18 @@
 
     if (isTargetCorrect) {
       playSound(rightAudio);
+      playWordSound(targetWord);
       frogRow = row; frogCol = col;
       renderGrid();
-      showToast(`✅ "${RAW_WORDS[row][col]}"`);
+      showToast(`✅ "${targetWord}"`);
     } else {
       playSound(wrongAudio);
+      playWordSound(targetWord);
       sunkMap[row][col] = true;
       gameActive = false;
       victory = false;
       renderGrid();
-      setTimeout(() => showModal("lose", RAW_WORDS[row][col]), 600);
+      setTimeout(() => showModal("lose", targetWord), 600);
       return false;
     }
     return true;
@@ -839,10 +926,8 @@
     renderGrid();
   }
   
-  // Initialize default to 'ei'
   loadLevel("ei");
 
-  // --- PROTECTION LAYERS ---
   document.addEventListener('contextmenu', event => event.preventDefault());
   document.addEventListener('keydown', event => {
     if (event.key === 'F12' || 
