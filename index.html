@@ -19,7 +19,25 @@
       min-height: 100vh;
       margin: 0;
       padding: 20px;
+      padding-bottom: 3rem; /* space for fixed footer */
       overflow-x: hidden;
+    }
+
+    /* Fixed footer – matches instruction tab font */
+    .copyright-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      color: #f0f7e0;
+      font-size: 1rem;          /* similar size to instruction text */
+      font-weight: 600;         /* same weight as instruction tab */
+      font-family: 'Segoe UI', 'Poppins', 'Comic Neue', sans-serif; /* matches game’s typography */
+      padding: 0.6rem 0;
+      z-index: 4000;
+      backdrop-filter: blur(4px);
+      /* no border – just the text */
     }
 
     .game-wrapper {
@@ -428,6 +446,7 @@
       .grid { grid-template-columns: repeat(6, minmax(70px, 85px)); gap: 8px; }
       .word { font-size: 0.8rem; white-space: normal; word-break: break-word; }
       .frog-icon { font-size: 1.6rem; }
+      .copyright-footer { font-size: 0.9rem; } /* slightly smaller on mobile */
     }
   </style>
 </head>
@@ -445,11 +464,7 @@
     <div class="divider"></div>
     <button class="mute-btn" id="muteBtn">🔊</button>
   </div>
-  
-   <div style="text-align: center; color: whitesmoke; font-size: 0.95rem; margin-top: auto; padding-top: 20px; font-weight: 700;">
-            © 2026 Vinícius Nunes. Designed for interactive English language learning.
-  </div>
-  
+
   <div class="game-container">
     
     <div class="top-bar">
@@ -464,7 +479,7 @@
     <div class="lake">
       <div class="grid" id="gridContainer"></div>
     </div>
-    
+
     <div class="toast-container" id="toastMessage">Welcome to Sound Leap!</div>
 
     <div class="modal-overlay" id="gameModal">
@@ -478,6 +493,9 @@
   </div>
 
 </div>
+
+<!-- Fixed copyright footer: same font as instruction tab -->
+<div class="copyright-footer">© 2026 Vinícius Nunes. Designed for interactive English language learning.</div>
 
 <script>
   // ================================
@@ -562,7 +580,6 @@
     for (const row of level.words) {
       for (const word of row) {
         if (!wordAudioMap[word]) {
-          // Audio file is expected to be exactly "word.mp3" (lowercase)
           wordAudioMap[word] = `${word}.mp3`;
         }
       }
@@ -579,7 +596,6 @@
     }
   }
   
-  // Play the pronunciation of a specific word (respects mute)
   function playWordSound(word) {
     if (isMuted) return;
     if (!wordAudioMap[word]) {
@@ -596,7 +612,6 @@
     audio.play().catch(e => console.log("Audio play failed:", e));
   }
   
-  // Preload all words from the current level
   function preloadAllWordsInCurrentLevel() {
     for (let r = 0; r < ROWS; r++) {
       for (let c = 0; c < COLS; c++) {
@@ -612,7 +627,6 @@
   const ROWS = 5;
   const COLS = 6;
 
-  // --- AUDIO SETUP ---
   const bgAudio = new Audio("https://raw.githubusercontent.com/notviniciuss-arch/frogpronunciation/8d8c4aa53d1a73fa0e3e3db04e18d2090fc11088/background-song.mp3");
   bgAudio.loop = true;
   bgAudio.volume = 0.3;
@@ -638,7 +652,6 @@
     }
   }, { once: true });
 
-  // --- UI CONTROLS ---
   const sideDrawer = document.getElementById("sideDrawer");
   const drawerToggle = document.getElementById("drawerToggle");
   const muteBtn = document.getElementById("muteBtn");
@@ -674,7 +687,6 @@
     }
   });
 
-  // --- TOAST & MODAL LOGIC ---
   const toastMessage = document.getElementById("toastMessage");
   let toastTimeout;
 
@@ -813,7 +825,6 @@
 
     visitedMap[frogRow][frogCol] = true;
 
-    // Play the word pronunciation for ANY landing (correct, wrong, or final)
     if (isTargetFinal) {
       playWordSound(targetWord);
       frogRow = row; frogCol = col;
